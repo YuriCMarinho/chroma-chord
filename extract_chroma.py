@@ -10,12 +10,17 @@ def extract_and_plot_chroma(audio_path, output_image_path="chromagram.png"):
   
     # 2. Compute the Constant-Q Transform (CQT)                                                                      
     # np.abs() gets the magnitude spectrum of the CQT
-    cqt_spec = np.abs(librosa.cqt(y=y, sr=sr))
+    # 36 bins per octave (3 per semitone) over 7 octaves gives narrow filters,
+    # which avoids energy leaking into neighbouring semitones in the chromagram.
+    bins_per_octave = 36
+    cqt_spec = np.abs(librosa.cqt(
+        y=y, sr=sr, bins_per_octave=bins_per_octave, n_bins=7 * bins_per_octave
+    ))
   
     # 3. Extract the chromagram from the computed CQT
-    # Since librosa.cqt uses bins_per_octave=12 by default (and chroma_cqt assumes 36),
-    # we must pass bins_per_octave=12 so the bins line up with the correct notes.
-    chroma = librosa.feature.chroma_cqt(C=cqt_spec, sr=sr, bins_per_octave=12)
+    # bins_per_octave must match the value used in the CQT above,
+    # otherwise the bins won't line up with the correct notes.
+    chroma = librosa.feature.chroma_cqt(C=cqt_spec, sr=sr, bins_per_octave=bins_per_octave)
   
     # 4. Normalize the chromagram matrix to the 0-1 range (min-max scaling)
     chroma_min = np.min(chroma)
