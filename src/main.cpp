@@ -7,7 +7,7 @@
 
 // Temporal segmentation parameters (in seconds)
 constexpr double kWindowDurationSec = 0.5;   // length of each analysis window
-constexpr double kHopDurationSec    = 0.25;  // step between window starts (50% overlap)
+constexpr double kHopDurationSec    = 0.5;   // step between window starts (no overlap)
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -51,14 +51,23 @@ int main(int argc, char* argv[]) {
     std::cout << "Window Size:   " << windowSize << " samples (" << kWindowDurationSec << " s)\n";
     std::cout << "Hop Length:    " << hopLength  << " samples (" << kHopDurationSec << " s)\n";
 
+    if (windowSize <= 0 || hopLength <= 0) {
+        std::cerr << "Error: Window size and hop length must be positive.\n";
+        return 1;
+    }
+
     // Temporal segmentation: slide a window over the mono track, advancing by hopLength
     std::vector<double> window(windowSize);
 
-    for (int start = 0; start + windowSize <= numSamples; start += hopLength) {
-        // Copy the current block of samples into the window buffer
+    for (int start = 0; start < numSamples; start += hopLength) {
+        // Copy the current block, clamped so we never read past the end of the track
+        const int available = std::min(windowSize, numSamples - start);
         std::copy(monoTrack.begin() + start,
-                  monoTrack.begin() + start + windowSize,
+                  monoTrack.begin() + start + available,
                   window.begin());
+
+        // Zero-pad the remainder of the final (partial) window
+        std::fill(window.begin() + available, window.end(), 0.0);
 
         const double currentSecond = static_cast<double>(start) / sampleRate;
         std::cout << "Processing window at " << std::fixed << std::setprecision(2)
