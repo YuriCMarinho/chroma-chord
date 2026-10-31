@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <iomanip>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -48,6 +50,20 @@ int main(int argc, char* argv[]) {
 
     std::cout << "Window Size:   " << windowSize << " samples (" << kWindowDurationSec << " s)\n";
     std::cout << "Hop Length:    " << hopLength  << " samples (" << kHopDurationSec << " s)\n";
+
+    // Temporal segmentation: slide a window over the mono track, advancing by hopLength
+    std::vector<double> window(windowSize);
+
+    for (int start = 0; start + windowSize <= numSamples; start += hopLength) {
+        // Copy the current block of samples into the window buffer
+        std::copy(monoTrack.begin() + start,
+                  monoTrack.begin() + start + windowSize,
+                  window.begin());
+
+        const double currentSecond = static_cast<double>(start) / sampleRate;
+        std::cout << "Processing window at " << std::fixed << std::setprecision(2)
+                  << currentSecond << " s\n";
+    }
 
     return 0;
 }
