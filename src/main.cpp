@@ -20,8 +20,6 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    audioFile.printSummary();
-
     // Store the mono track in a std::vector
     const int numChannels = audioFile.getNumChannels();
     const int numSamples = audioFile.getNumSamplesPerChannel();
@@ -35,7 +33,9 @@ int main(int argc, char* argv[]) {
         monoTrack[i] = sum / numChannels;
     }
 
-    std::cout << "Successfully extracted mono track (" << monoTrack.size() << " samples).\n";
+    // Print file metadata
+    std::cout << "Sample Rate:   " << audioFile.getSampleRate() << " Hz\n";
+    std::cout << "Total Samples: " << monoTrack.size() << "\n";
 
     return 0;
 }
