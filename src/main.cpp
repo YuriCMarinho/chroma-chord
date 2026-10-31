@@ -3,7 +3,16 @@
 #include <iostream>
 #include <string>
 #include <vector>
+// AudioFile.h (third-party) triggers -Wstrict-aliasing in its AIFF float decoder;
+// suppress it for this header only.
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#endif
 #include "AudioFile.h"
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 // Temporal segmentation parameters (in seconds)
 constexpr double kWindowDurationSec = 0.5;   // length of each analysis window
