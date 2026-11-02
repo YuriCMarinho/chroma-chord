@@ -1,5 +1,10 @@
 CXX ?= g++
-CXXFLAGS ?= -std=c++20 -Wall -Wextra -Wpedantic -Iinclude
+TORCH_DIR ?= $(CURDIR)/venv/lib/python3.12/site-packages/torch
+TORCH_INCLUDES = -isystem $(TORCH_DIR)/include -isystem $(TORCH_DIR)/include/torch/csrc/api/include
+TORCH_LDFLAGS = -L$(TORCH_DIR)/lib -Wl,-rpath,$(TORCH_DIR)/lib -ltorch -ltorch_cpu -lc10
+
+CXXFLAGS ?= -std=c++20 -Wall -Wextra -Wpedantic -Iinclude $(TORCH_INCLUDES)
+LDFLAGS ?= $(TORCH_LDFLAGS)
 RELEASE_FLAGS ?= -O3
 DEBUG_FLAGS ?= -g -O0
 
@@ -22,7 +27,7 @@ debug: CXXFLAGS += $(DEBUG_FLAGS)
 debug: $(TARGET)
 
 $(TARGET): $(OBJS) | $(BIN_DIR)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -37,4 +42,4 @@ clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR)
 
 run: all
-	./$(TARGET)
+	./$(TARGET) chord_test.wav
