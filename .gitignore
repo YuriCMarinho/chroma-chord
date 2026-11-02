@@ -1,4 +1,36 @@
+feat/read-audio-file-and-temporal-segmentation
+# Build and binaries
+build/
+bin/
+obj/
+*.o
+*.a
+*.so
+*.dylib
+*.exe
+*.out
+
+# CMake artifacts
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile.cmake
+install_manifest.txt
+compile_commands.json
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Test outputs / temp files
+*.tmp
+temp/
 venv/
 __pycache__/
 *.png
+dev
 *.wav
