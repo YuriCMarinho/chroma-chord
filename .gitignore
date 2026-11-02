@@ -1,3 +1,4 @@
+feat/read-audio-file-and-temporal-segmentation
 # Build and binaries
 build/
 bin/
@@ -28,4 +29,8 @@ compile_commands.json
 # Test outputs / temp files
 *.tmp
 temp/
+venv/
+__pycache__/
+*.png
+dev
 *.wav
