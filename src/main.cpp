@@ -1,3 +1,5 @@
+#include <torch/script.h>                                                
+#include <torch/torch.h> 
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
@@ -12,8 +14,8 @@
 #include "AudioFile.h"
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
-#endif
-
+#endif                                                                    
+         
 // Temporal segmentation parameters (in seconds)
 constexpr double kWindowDurationSec = 0.5;   // length of each analysis window
 constexpr double kHopDurationSec    = 0.5;   // step between window starts (no overlap)
@@ -22,6 +24,18 @@ int main(int argc, char* argv[]) {
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " <path-to-wav-file>\n";
         return 1;
+    }
+
+    // Load the exported TorchScript model                          
+    torch::jit::Module model;                                    
+    try {                                                                
+        model = torch::jit::load("baseline_model.pt");                   
+        model.eval();                                                    
+        std::cout << "Model baseline_model.pt loaded successfully.\n";   
+    } catch (const c10::Error& e) {                                      
+        std::cerr << "Error loading baseline_model.pt: " << e.what() <<  
+        "\n";                                                            
+        return 1;                                                        
     }
 
     const std::string filePath = argv[1];
@@ -77,10 +91,24 @@ int main(int argc, char* argv[]) {
 
         // Zero-pad the remainder of the final (partial) window
         std::fill(window.begin() + available, window.end(), 0.0);
-
+        
+        std::vector<float> chromaFrame(12, 0.0f);
+        for (int i = 0; i < 12 && i < windowSize; ++i) {
+            chromaFrame[i] = static_cast<float>(window[i]);
+        }
+  
+        //Extract 12 arbitrary values from the current window to simulate the chromagram 
+        torch::Tensor inputTensor = torch::from_blob(chromaFrame.data(), {1, 12}, torch::kFloat32).clone();
+  
+        //Run model inference and extract predicted class via argmax                                                   
+        at::Tensor output = model.forward({inputTensor}).toTensor();     
+        int predictedClass = output.argmax(1).item<int>();
+  
+        //  Print window timestamp and predicted chord index 
         const double currentSecond = static_cast<double>(start) / sampleRate;
-        std::cout << "Processing window at " << std::fixed << std::setprecision(2)
-                  << currentSecond << " s\n";
+        std::cout << "Window at " << std::fixed << std::setprecision(2)  
+                    << currentSecond << " s -> Chord Index: " <<           
+                    predictedClass << "\n";
     }
 
     return 0;
